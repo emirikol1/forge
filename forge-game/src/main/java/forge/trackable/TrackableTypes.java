@@ -21,8 +21,10 @@ import forge.game.spellability.StackItemView;
 import forge.item.IPaperCard;
 
 public class TrackableTypes {
-    public static abstract class TrackableType<T> {
-        private TrackableType() {
+    public static class TrackableType<T> {
+        private T defaultValue;
+        private TrackableType(T defaultValue) {
+            this.defaultValue = defaultValue;
         }
 
         protected void updateObjLookup(Tracker tracker, T newObj) {
@@ -30,14 +32,7 @@ public class TrackableTypes {
         protected void copyChangedProps(TrackableObject from, TrackableObject to, TrackableProperty prop) {
             to.set(prop, from.get(prop));
         }
-        protected abstract T getDefaultValue();
-    }
 
-    public static class TrackableValueType<T> extends TrackableType<T> {
-        private T defaultValue;
-        private TrackableValueType(T defaultValue) {
-            this.defaultValue = defaultValue;
-        }
         protected T getDefaultValue() {
             return defaultValue;
         }
@@ -45,6 +40,7 @@ public class TrackableTypes {
 
     public static class TrackableObjectType<T extends TrackableObject> extends TrackableType<T> {
         private TrackableObjectType() {
+            super(null);
         }
 
         public T lookup(T from) {
@@ -81,17 +77,13 @@ public class TrackableTypes {
             }
             to.set(prop, newObj);
         }
-
-        @Override
-        protected T getDefaultValue() {
-            return null;
-        }
     }
 
     private static class TrackableCollectionType<T extends TrackableObject> extends TrackableType<TrackableCollection<T>> {
         private final TrackableObjectType<T> itemType;
 
         private TrackableCollectionType(TrackableObjectType<T> itemType0) {
+            super(new TrackableCollection<T>());
             itemType = itemType0;
         }
 
@@ -134,46 +126,27 @@ public class TrackableTypes {
             }
             to.set(prop, newCollection);
         }
-
-        @Override
-        protected TrackableCollection<T> getDefaultValue() {
-            return new TrackableCollection<>();
-        }
     }
 
-    public static final TrackableType<Boolean> BooleanType = new TrackableValueType<Boolean>(false);
-    public static final TrackableType<Integer> IntegerType = new TrackableValueType<Integer>(0);
-    public static final TrackableType<Float> FloatType = new TrackableValueType<Float>(0f);
-    public static final TrackableType<String> StringType = new TrackableValueType<String>("");
+    public static final TrackableType<Boolean> BooleanType = new TrackableType<Boolean>(false);
+    public static final TrackableType<Integer> IntegerType = new TrackableType<Integer>(0);
+    public static final TrackableType<Float> FloatType = new TrackableType<Float>(0f);
+    public static final TrackableType<String> StringType = new TrackableType<String>("");
 
     //make this quicker than having to define a new class for every single enum
     private static Map<Class<? extends Enum<?>>, TrackableType<?>> enumTypes = Maps.newHashMap();
 
     @SuppressWarnings("unchecked")
     public static <E extends Enum<E>> TrackableType<E> EnumType(final Class<E> enumType) {
-        TrackableType<E> type = (TrackableType<E>)enumTypes.get(enumType);
-        if (type == null) {
-            type = new TrackableType<E>() {
-                @Override
-                public E getDefaultValue() {
-                    return null;
-                }
-            };
-            enumTypes.put(enumType, type);
-        }
-        return type;
+        return (TrackableType<E>)enumTypes.computeIfAbsent(enumType, (t) -> new TrackableType<E>(null));
     }
 
     public static final TrackableObjectType<CardView> CardViewType = new TrackableObjectType<CardView>();
 
-    public static final TrackableType<IPaperCard> IPaperCardType = new TrackableValueType<IPaperCard>(null);
+    public static final TrackableType<IPaperCard> IPaperCardType = new TrackableType<IPaperCard>(null);
 
     public static final TrackableCollectionType<CardView> CardViewCollectionType = new TrackableCollectionType<CardView>(CardViewType);
     public static final TrackableObjectType<CardStateView> CardStateViewType = new TrackableObjectType<CardStateView>() {
-        @Override
-        protected CardStateView getDefaultValue() {
-            return null;
-        }
         @Override
         protected void copyChangedProps(TrackableObject from, TrackableObject to, TrackableProperty prop) {
             // CardStateViews share their parent CardView's ID, so multiple states
@@ -190,23 +163,23 @@ public class TrackableTypes {
             }
         }
     };
-    public static final TrackableType<CardTypeView> CardTypeViewType = new TrackableValueType<CardTypeView>(CardType.EMPTY);
+    public static final TrackableType<CardTypeView> CardTypeViewType = new TrackableType<CardTypeView>(CardType.EMPTY);
     public static final TrackableObjectType<PlayerView> PlayerViewType = new TrackableObjectType<PlayerView>();
     public static final TrackableCollectionType<PlayerView> PlayerViewCollectionType = new TrackableCollectionType<PlayerView>(PlayerViewType);
     public static final TrackableObjectType<GameEntityView> GameEntityViewType = new TrackableObjectType<GameEntityView>();
     public static final TrackableObjectType<StackItemView> StackItemViewType = new TrackableObjectType<StackItemView>();
     public static final TrackableCollectionType<StackItemView> StackItemViewListType = new TrackableCollectionType<StackItemView>(StackItemViewType);
     public static final TrackableObjectType<CombatView> CombatViewType = new TrackableObjectType<CombatView>();
-    public static final TrackableType<ManaCost> ManaCostType = new TrackableValueType<ManaCost>(ManaCost.NO_COST);
-    public static final TrackableType<ColorSet> ColorSetType = new TrackableValueType<ColorSet>(ColorSet.C);
-    public static final TrackableType<List<String>> StringListType = new TrackableValueType<List<String>>(null);
-    public static final TrackableType<Set<String>> StringSetType = new TrackableValueType<Set<String>>(null);
-    public static final TrackableType<Map<String, String>> StringMapType = new TrackableValueType<Map<String, String>>(null);
+    public static final TrackableType<ManaCost> ManaCostType = new TrackableType<ManaCost>(ManaCost.NO_COST);
+    public static final TrackableType<ColorSet> ColorSetType = new TrackableType<ColorSet>(ColorSet.C);
+    public static final TrackableType<List<String>> StringListType = new TrackableType<List<String>>(null);
+    public static final TrackableType<Set<String>> StringSetType = new TrackableType<Set<String>>(null);
+    public static final TrackableType<Map<String, String>> StringMapType = new TrackableType<Map<String, String>>(null);
 
-    public static final TrackableType<Set<Integer>> IntegerSetType = new TrackableValueType<Set<Integer>>(null);
-    public static final TrackableType<Map<Integer, Integer>> IntegerMapType = new TrackableValueType<Map<Integer, Integer>>(null);
-    public static final TrackableType<Map<Byte, Integer>> ManaMapType = new TrackableValueType<Map<Byte, Integer>>(null);
-    public static final TrackableType<Map<CounterType, Integer>> CounterMapType = new TrackableValueType<Map<CounterType, Integer>>(null);
-    public static final TrackableType<Map<Object, Object>> GenericMapType = new TrackableValueType<Map<Object, Object>>(null);
-    public static final TrackableType<KeywordCollectionView> KeywordCollectionViewType = new TrackableValueType<KeywordCollectionView>(KeywordCollectionView.EMPTY);
+    public static final TrackableType<Set<Integer>> IntegerSetType = new TrackableType<Set<Integer>>(null);
+    public static final TrackableType<Map<Integer, Integer>> IntegerMapType = new TrackableType<Map<Integer, Integer>>(null);
+    public static final TrackableType<Map<Byte, Integer>> ManaMapType = new TrackableType<Map<Byte, Integer>>(null);
+    public static final TrackableType<Map<CounterType, Integer>> CounterMapType = new TrackableType<Map<CounterType, Integer>>(null);
+    public static final TrackableType<Map<Object, Object>> GenericMapType = new TrackableType<Map<Object, Object>>(null);
+    public static final TrackableType<KeywordCollectionView> KeywordCollectionViewType = new TrackableType<KeywordCollectionView>(KeywordCollectionView.EMPTY);
 }
