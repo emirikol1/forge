@@ -1828,7 +1828,6 @@ public class CardView extends GameEntityView {
                     set(key, null);
                 } else if (views.remove(c.getView())) {
                     if (views.isEmpty()) {
-                        views = null;
                         set(key, null); //avoid keeping around an empty collection
                         needFlagAsChanged = false; //doesn't need to be flagged a second time
                     }
