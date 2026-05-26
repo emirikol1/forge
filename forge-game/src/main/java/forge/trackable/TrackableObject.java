@@ -3,6 +3,7 @@ package forge.trackable;
 import java.io.Serializable;
 import java.util.EnumMap;
 import java.util.EnumSet;
+import java.util.function.Function;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
