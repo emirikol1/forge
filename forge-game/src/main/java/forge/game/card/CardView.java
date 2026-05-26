@@ -1761,13 +1761,9 @@ public class CardView extends GameEntityView {
             oldCards = new CardCollection();
         }
         if (oldCards.add(cardToAdd)) {
-            TrackableCollection<CardView> views = get(key);
+            TrackableCollection<CardView> views = computeIfAbsent(key, (t) -> new TrackableCollection<CardView>());
             if (views.add(cardToAdd.getView())) {
-                if (!has(key)) {
-                    set(key, views);
-                } else {
-                    flagAsChanged(key);
-                }
+                flagAsChanged(key);
             }
         }
         return oldCards;
@@ -1775,18 +1771,14 @@ public class CardView extends GameEntityView {
     CardCollection addCards(CardCollection oldCards, Iterable<Card> cardsToAdd, TrackableProperty key) {
         if (cardsToAdd == null) { return oldCards; }
 
-        boolean newProp = !has(key);
-        TrackableCollection<CardView> views = get(key);
         if (oldCards == null) {
             oldCards = new CardCollection();
         }
         boolean needFlagAsChanged = false;
         for (Card c : cardsToAdd) {
-            if (c != null && oldCards.add(c) && views.add(c.getView())) {
-                if (newProp) {
-                    set(key, views);
-                    newProp = false;
-                } else {
+            if (c != null && oldCards.add(c)) {
+                TrackableCollection<CardView> views = computeIfAbsent(key, (t) -> new TrackableCollection<CardView>());
+                if (views.add(c.getView())) {
                     needFlagAsChanged = true;
                 }
             }

@@ -79,6 +79,11 @@ public abstract class TrackableObject implements IIdentifiable, Serializable {
         return value;
     }
 
+    @SuppressWarnings("unchecked")
+    protected final <T> T computeIfAbsent(final TrackableProperty key, Function<TrackableProperty, T> mappingFunction) {
+        return (T)props.computeIfAbsent(key, mappingFunction);
+    }
+
     public final boolean has(final TrackableProperty key) {
         return props.containsKey(key);
     }
