@@ -1762,13 +1762,12 @@ public class CardView extends GameEntityView {
         }
         if (oldCards.add(cardToAdd)) {
             TrackableCollection<CardView> views = get(key);
-            if (views == null) {
-                views = new TrackableCollection<>();
-                views.add(cardToAdd.getView());
-                set(key, views);
-            }
-            else if (views.add(cardToAdd.getView())) {
-                flagAsChanged(key);
+            if (views.add(cardToAdd.getView())) {
+                if (!has(key)) {
+                    set(key, views);
+                } else {
+                    flagAsChanged(key);
+                }
             }
         }
         return oldCards;
@@ -1776,19 +1775,18 @@ public class CardView extends GameEntityView {
     CardCollection addCards(CardCollection oldCards, Iterable<Card> cardsToAdd, TrackableProperty key) {
         if (cardsToAdd == null) { return oldCards; }
 
+        boolean newProp = !has(key);
         TrackableCollection<CardView> views = get(key);
         if (oldCards == null) {
             oldCards = new CardCollection();
         }
         boolean needFlagAsChanged = false;
         for (Card c : cardsToAdd) {
-            if (c != null && oldCards.add(c)) {
-                if (views == null) {
-                    views = new TrackableCollection<>();
-                    views.add(c.getView());
+            if (c != null && oldCards.add(c) && views.add(c.getView())) {
+                if (newProp) {
                     set(key, views);
-                }
-                else if (views.add(c.getView())) {
+                    newProp = false;
+                } else {
                     needFlagAsChanged = true;
                 }
             }
@@ -1803,7 +1801,7 @@ public class CardView extends GameEntityView {
 
         if (oldCards.remove(cardToRemove)) {
             TrackableCollection<CardView> views = get(key);
-            if (views == null) {
+            if (views.isEmpty()) {
                 set(key, null);
             } else if (views.remove(cardToRemove.getView())) {
                 if (views.isEmpty()) {
@@ -1826,7 +1824,7 @@ public class CardView extends GameEntityView {
         boolean needFlagAsChanged = false;
         for (Card c : cardsToRemove) {
             if (oldCards.remove(c)) {
-                if (views == null) {
+                if (views.isEmpty()) {
                     set(key, null);
                 } else if (views.remove(c.getView())) {
                     if (views.isEmpty()) {
@@ -1856,10 +1854,10 @@ public class CardView extends GameEntityView {
         return null;
     }
     void updateMergeCollections(CardCollection cards) {
+        boolean newProp = !has(TrackableProperty.MergedCardsCollection);
         TrackableCollection<CardView> views = get(TrackableProperty.MergedCardsCollection);
         boolean needFlagAsChanged = false;
-        if (views == null) {
-            views = new TrackableCollection<>();
+        if (newProp) {
             set(TrackableProperty.MergedCardsCollection, views);
         } else {
             if (!views.isEmpty())

@@ -79,6 +79,10 @@ public abstract class TrackableObject implements IIdentifiable, Serializable {
         return value;
     }
 
+    public final boolean has(final TrackableProperty key) {
+        return props.containsKey(key);
+    }
+
     public final <T> void set(final TrackableProperty key, final T value) {
         if (tracker != null && tracker.isFrozen()) { //if trackable objects currently frozen, queue up delayed prop change
             boolean respectsFreeze = false;
